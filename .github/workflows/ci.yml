@@ -1,0 +1,41 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t devops-pipeline-app:ci .
+
+      - name: Run container in background
+        run: docker run -d -p 3000:3000 --name test-container devops-pipeline-app:ci
+
+      - name: Wait for app to be ready
+        run: sleep 3
+
+      - name: Test health endpoint
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/health)
+          if [ "$response" -ne 200 ]; then
+            echo "Health check failed with status $response"
+            exit 1
+          fi
+          echo "Health check passed"
+
+      - name: Show container logs (for debugging)
+        if: always()
+        run: docker logs test-container
+
+      - name: Clean up
+        if: always()
+        run: docker rm -f test-container
