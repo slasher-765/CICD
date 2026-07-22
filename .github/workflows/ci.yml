@@ -40,14 +40,6 @@ jobs:
         if: always()
         run: docker rm -f test-container
 
-
-
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      # ... your existing steps stay exactly as they are ...
-
   push-to-registry:
     needs: build-and-test
     runs-on: ubuntu-latest
